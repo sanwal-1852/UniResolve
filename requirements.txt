@@ -1,0 +1,28 @@
+# UniResolve — Node.js Dependency Requirements
+# ─────────────────────────────────────────────
+# This file lists all backend dependencies.
+# Install them with: cd backend && npm install
+#
+# Node.js >= 18.0.0 is required.
+# MongoDB >= 6.0 is required (local or Atlas).
+#
+# ─── Production Dependencies ────────────────
+bcryptjs==2.4.3          # Password hashing (bcrypt implementation in pure JS)
+cors==2.8.5              # Cross-Origin Resource Sharing middleware
+dotenv==16.4.5           # Loads environment variables from .env file
+express==4.19.2          # Web framework
+express-rate-limit==7.3.1  # Rate limiting to protect API from abuse
+express-validator==7.1.0   # Input validation and sanitisation
+jsonwebtoken==9.0.2      # JWT creation and verification
+mongoose==8.4.1          # MongoDB ODM (Object Document Mapper)
+morgan==1.10.0           # HTTP request logger middleware
+#
+# ─── Development Dependencies ───────────────
+nodemon==3.1.3           # Auto-restart server on file changes (dev only)
+#
+# ─── Installation Commands ──────────────────
+# cd backend
+# npm install                  → installs all dependencies from package.json
+# npm run seed                 → seeds the database with sample data
+# npm run dev                  → starts server with nodemon (development)
+# npm start                    → starts server with node (production)

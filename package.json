@@ -1,0 +1,14 @@
+{
+  "name": "uniresolve",
+  "version": "1.0.0",
+  "description": "UniResolve — University Complaint Management System",
+  "scripts": {
+    "install:backend": "cd backend && npm install",
+    "seed": "cd backend && npm run seed",
+    "start": "cd backend && npm start",
+    "dev": "cd backend && npm run dev"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
