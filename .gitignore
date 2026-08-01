@@ -17,3 +17,6 @@ npm-debug.log*
 # Editor
 .vscode/
 .idea/
+
+# Generated report (regenerate rather than version binary files)
+*.docx
