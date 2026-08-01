@@ -1,0 +1,16 @@
+{
+  "name": "usp-complaint-management",
+  "version": "1.0.0",
+  "description": "University of Southern Punjab — University Complaint Management System",
+  "scripts": {
+    "install:backend": "cd backend && npm install",
+    "seed": "cd backend && npm run seed",
+    "start": "cd backend && npm start",
+    "dev": "cd backend && npm run dev",
+    "chatbot:test": "cd backend && npm run chatbot:test",
+    "chatbot:roleplay": "cd backend && npm run chatbot:roleplay"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

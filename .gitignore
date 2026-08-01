@@ -1,0 +1,19 @@
+# Dependencies — reinstall with `npm run install:backend`
+node_modules/
+.npm-cache/
+
+# Environment — contains the JWT secret. Copy backend/.env.example instead.
+.env
+.env.local
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Logs and runtime
+*.log
+npm-debug.log*
+
+# Editor
+.vscode/
+.idea/

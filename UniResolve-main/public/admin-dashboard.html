@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard — University of Southern Punjab</title>
+  <link href="vendor/bootstrap/bootstrap.min.css" rel="stylesheet">
+  <link href="vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+
+  <!-- ============================================================
+       NAVIGATION BAR
+       ============================================================ -->
+  <nav class="navbar navbar-expand-lg navbar-custom sticky-top" id="mainNav">
+    <div class="container">
+      <a class="navbar-brand" href="admin-dashboard.html" onclick="handleHomeClick(event)">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-label="University of Southern Punjab logo">
+          <rect x="2" y="14" width="28" height="16" rx="2" fill="rgba(255,255,255,0.12)"/>
+          <path d="M16 2L4 12h24L16 2z" fill="#0d6e78"/>
+          <rect x="10" y="18" width="4" height="8" rx="1" fill="rgba(255,255,255,0.7)"/>
+          <rect x="18" y="18" width="4" height="8" rx="1" fill="rgba(255,255,255,0.7)"/>
+          <circle cx="16" cy="16" r="2" fill="#ffffff"/>
+        </svg>
+        University of Southern Punjab
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto gap-1">
+          <li class="nav-item"><a class="nav-link" href="admin-dashboard.html" onclick="handleHomeClick(event)"><i class="bi bi-house-door me-1"></i>Home</a></li>
+          <li class="nav-item" id="nav-logout"><a class="nav-link" href="#" onclick="handleLogout(event)"><i class="bi bi-box-arrow-right me-1"></i>Logout</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+
+  <!-- ============================================================
+       ADMIN DASHBOARD
+       View all complaints, update statuses via modal,
+       search/filter by category and status
+       ============================================================ -->
+  <section class="page-content">
+    <div class="container">
+
+      <!-- Breadcrumb -->
+      <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb" style="font-size:0.8125rem;">
+          <li class="breadcrumb-item"><a href="admin-dashboard.html" onclick="handleHomeClick(event)" class="text-primary-custom" style="text-decoration:none;">Home</a></li>
+          <li class="breadcrumb-item active" aria-current="page">Admin Dashboard</li>
+        </ol>
+      </nav>
+
+      <!-- Page heading -->
+      <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+        <div>
+          <h3 style="font-size:1.25rem;" class="mb-0">Admin Dashboard</h3>
+          <p class="text-muted mb-0" style="font-size:0.8125rem;">Manage and resolve all student complaints</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+          <button type="button" class="btn btn-primary-custom btn-sm-custom" onclick="openAdminComplaintModal()">
+            <i class="bi bi-plus-circle me-1"></i> Create Complaint
+          </button>
+          <button type="button" class="btn btn-outline-custom btn-sm-custom" onclick="openCoordinatorCreateModal()">
+            <i class="bi bi-person-plus me-1"></i> Add Coordinator
+          </button>
+          <select class="form-select form-select-custom" id="adminReportFormat" style="width:auto; min-width:120px;">
+            <option value="csv">CSV</option>
+            <option value="xls">Excel</option>
+            <option value="pdf">PDF</option>
+            <option value="print">Print</option>
+          </select>
+          <button type="button" class="btn btn-outline-custom btn-sm-custom" onclick="downloadAdminReport()">
+            <i class="bi bi-download me-1"></i> Report
+          </button>
+        </div>
+      </div>
+
+      <!-- Complaint overview: status donut + category breakdown -->
+      <div class="row g-3 mb-4">
+        <div class="col-lg-7">
+          <div class="card-custom chart-card animate-in animate-in-1">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+                <div>
+                  <h5 class="chart-title">Complaint Overview</h5>
+                  <p class="chart-subtitle">Click a slice or a status to filter the list below.</p>
+                </div>
+                <button type="button" class="btn btn-outline-custom btn-sm-custom" onclick="setAdminStatusFilter('All')">Reset</button>
+              </div>
+              <div class="row align-items-center g-3">
+                <div class="col-md-6">
+                  <div class="chart-canvas-wrap donut-wrap">
+                    <canvas id="adminStatusChart"></canvas>
+                    <div class="donut-center">
+                      <strong id="adminPieTotal">0</strong>
+                      <span>Total</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="pie-legend" id="adminPieLegend" style="grid-template-columns:1fr;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-5">
+          <div class="card-custom chart-card animate-in animate-in-2">
+            <div class="card-body">
+              <h5 class="chart-title">Complaints by Category</h5>
+              <p class="chart-subtitle mb-3">Top categories across all complaints.</p>
+              <div class="chart-canvas-wrap chart-tall">
+                <canvas id="adminCategoryChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Analytics & feedback insights -->
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <i class="bi bi-graph-up-arrow text-primary-custom"></i>
+        <h5 class="mb-0" style="font-size:1.0625rem;">Analytics &amp; Feedback</h5>
+      </div>
+
+      <div class="row g-3 mb-3">
+        <div class="col-6 col-lg-3">
+          <div class="stat-card animate-in animate-in-1">
+            <div class="stat-icon amber"><i class="bi bi-star-fill"></i></div>
+            <div><div class="stat-value" id="analyticsAvgRating">—</div><div class="stat-label">Average Rating</div></div>
+          </div>
+        </div>
+        <div class="col-6 col-lg-3">
+          <button type="button" class="stat-card stat-card-action w-100 animate-in animate-in-2" id="adminFeedbackCard" onclick="setAdminInsightFilter('feedback')">
+            <div class="stat-icon teal"><i class="bi bi-chat-left-text-fill"></i></div>
+            <div><div class="stat-value" id="analyticsFeedbackCount">0</div><div class="stat-label">Feedback Received</div></div>
+          </button>
+        </div>
+        <div class="col-6 col-lg-3">
+          <button type="button" class="stat-card stat-card-action w-100 animate-in animate-in-3" id="adminLowRatedCard" onclick="setAdminInsightFilter('lowRated')">
+            <div class="stat-icon red"><i class="bi bi-emoji-frown-fill"></i></div>
+            <div><div class="stat-value" id="analyticsLowRated">0</div><div class="stat-label">Low Rated (≤2)</div></div>
+          </button>
+        </div>
+        <div class="col-6 col-lg-3">
+          <button type="button" class="stat-card stat-card-action w-100 animate-in animate-in-4" id="adminReopenCard" onclick="setAdminInsightFilter('reopen')">
+            <div class="stat-icon blue"><i class="bi bi-arrow-counterclockwise"></i></div>
+            <div><div class="stat-value" id="analyticsReopenPending">0</div><div class="stat-label">Reopen Pending</div></div>
+          </button>
+        </div>
+      </div>
+
+      <div class="row g-3 mb-4">
+        <div class="col-lg-4">
+          <div class="card-custom h-100">
+            <div class="card-body">
+              <h5 class="chart-title">Rating by Department</h5>
+              <p class="chart-subtitle mb-3">Average student rating out of 5.</p>
+              <div class="chart-canvas-wrap"><canvas id="adminRatingChart"></canvas></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="card-custom h-100">
+            <div class="card-body">
+              <h5 class="chart-title">Priority Mix</h5>
+              <p class="chart-subtitle mb-3">How complaints are prioritised.</p>
+              <div class="chart-canvas-wrap"><canvas id="adminPriorityChart"></canvas></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="card-custom h-100">
+            <div class="card-body">
+              <h5 class="chart-title">Coordinator Ratings</h5>
+              <p class="chart-subtitle mb-3">Average rating per coordinator.</p>
+              <div id="coordinatorFeedbackSummary"></div>
+              <hr class="my-3">
+              <div class="detail-label">By Department</div>
+              <div id="departmentFeedbackSummary"></div>
+              <hr class="my-3">
+              <div class="d-flex justify-content-between" style="font-size:0.875rem;">
+                <span class="text-muted">Avg. resolution time</span>
+                <strong id="analyticsAvgResolution">—</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search and Filter Bar -->
+      <div class="filter-bar">
+        <div class="form-group" style="flex:2; min-width:240px;">
+          <label class="form-label form-label-custom">Search</label>
+          <div class="input-group">
+            <span class="input-group-text" style="background:var(--color-surface); border:1.5px solid var(--color-border); border-right:none;">
+              <i class="bi bi-search" style="color:var(--color-text-muted); font-size:0.875rem;"></i>
+            </span>
+            <input type="text" class="form-control form-control-custom" id="adminSearchInput" placeholder="Search by title, student, or ID..." oninput="loadAdminComplaints()" style="border-left:none;">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label form-label-custom">Category</label>
+          <select class="form-select form-select-custom" id="adminFilterCategory" data-category-select data-keep-all="true" onchange="loadAdminComplaints()"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label form-label-custom">Concerned Department</label>
+          <select class="form-select form-select-custom" id="adminFilterDepartment" data-department-select data-keep-all="true" onchange="loadAdminComplaints()"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label form-label-custom">Status</label>
+          <select class="form-select form-select-custom" id="adminFilterStatus" onchange="loadAdminComplaints()">
+            <option value="All">All Statuses</option>
+            <option value="Submitted">Submitted</option>
+            <option value="Under Review">Under Review</option>
+            <option value="Rejected">Rejected</option>
+            <option value="Assigned">Assigned</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Resolved">Resolved</option>
+            <option value="Reopen Requested">Reopen Requested</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row g-3 mb-4">
+        <div class="col-md-6">
+          <form class="card-custom" onsubmit="createCategory(event)">
+            <div class="card-body">
+              <label class="form-label form-label-custom">Add Complaint Category</label>
+              <div class="input-group">
+                <input class="form-control form-control-custom" id="newCategoryName" placeholder="e.g. Library">
+                <button class="btn btn-primary-custom" type="submit"><i class="bi bi-plus-lg"></i></button>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="col-md-6">
+          <form class="card-custom" onsubmit="createDepartment(event)">
+            <div class="card-body">
+              <label class="form-label form-label-custom">Add Department</label>
+              <div class="input-group">
+                <input class="form-control form-control-custom" id="newDepartmentName" placeholder="e.g. Student Affairs">
+                <button class="btn btn-primary-custom" type="submit"><i class="bi bi-plus-lg"></i></button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Admin complaints table -->
+      <div class="card-custom">
+        <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+          <div style="font-weight:600;">Complaint Records</div>
+          <button type="button" class="btn btn-outline-custom btn-sm-custom" id="adminBulkDeleteBtn" onclick="deleteSelectedAdminComplaints()" disabled>
+            <i class="bi bi-trash me-1"></i> Delete Selected <span id="adminSelectedCount">(0)</span>
+          </button>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-custom mb-0">
+              <thead>
+                <tr>
+                  <th style="width:48px;text-align:center;">
+                    <input class="form-check-input" type="checkbox" id="adminSelectAllComplaints" onchange="toggleAllAdminComplaintSelection(this.checked)" aria-label="Select all complaints on this page">
+                  </th>
+                  <th>ID</th>
+                  <th>Title</th>
+                  <th>Student</th>
+                  <th>Department</th>
+                  <th>Coordinator</th>
+                  <th>Status</th>
+                  <th>Submitted</th>
+                  <th style="text-align:center;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminComplaintsBody">
+                <!-- Rows populated by JavaScript -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Empty state -->
+          <div id="adminEmptyState" class="empty-state d-none">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <h5>No complaints match your filters</h5>
+            <p>Try adjusting your search terms or clearing the filters above.</p>
+          </div>
+          <div class="p-3 border-top d-none" id="adminPaginationWrap">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+              <div class="text-muted" style="font-size:0.8125rem;" id="adminPaginationInfo"></div>
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-outline-custom btn-sm-custom" onclick="setAdminPage(_adminCurrentPage - 1)" id="adminPrevPage">
+                  <i class="bi bi-chevron-left me-1"></i> Previous
+                </button>
+                <button type="button" class="btn btn-outline-custom btn-sm-custom" onclick="setAdminPage(_adminCurrentPage + 1)" id="adminNextPage">
+                  Next <i class="bi bi-chevron-right ms-1"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <div class="modal fade" id="assignModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="assignModalTitle"><i class="bi bi-person-check text-primary-custom me-2"></i>Assign Valid Complaint</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label form-label-custom">Forward to Department</label>
+            <select class="form-select form-select-custom" id="assignDepartment" data-department-select></select>
+            <div class="form-text">Prefilled from the student's selected concerned department. Change it only if the complaint was routed incorrectly.</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label form-label-custom">Coordinator</label>
+            <select class="form-select form-select-custom" id="assignCoordinator" data-coordinator-select></select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label form-label-custom">Priority</label>
+            <select class="form-select form-select-custom" id="assignPriority">
+              <option value="Low">Low</option>
+              <option value="Medium">Medium</option>
+              <option value="High">High</option>
+              <option value="Urgent">Urgent</option>
+            </select>
+            <div class="form-text">Set by admin during review based on urgency and impact.</div>
+          </div>
+          <div>
+            <label class="form-label form-label-custom">Admin Notes <span style="color:var(--color-text-faint); font-weight:400;">(optional)</span></label>
+            <textarea class="form-control form-control-custom" id="assignAdminNotes" rows="3" placeholder="Add internal assignment notes..."></textarea>
+          </div>
+          <input type="hidden" id="assignComplaintId">
+          <input type="hidden" id="assignMode" value="assign">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-custom" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary-custom" id="assignSubmitBtn" onclick="assignComplaint()"><i class="bi bi-check-lg me-1"></i> Assign</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="coordinatorCreateModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <form onsubmit="createCoordinatorAccount(event)">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="bi bi-person-plus text-primary-custom me-2"></i>Add Coordinator</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div id="coordinatorCreateAlert" class="alert alert-danger alert-custom d-none"></div>
+            <div class="mb-3">
+              <label class="form-label form-label-custom">Full Name</label>
+              <input class="form-control form-control-custom" id="newCoordinatorName" placeholder="e.g. Accounts Coordinator" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label form-label-custom">Email</label>
+              <input type="email" class="form-control form-control-custom" id="newCoordinatorEmail" placeholder="coordinator@usp.edu.pk" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label form-label-custom">Password</label>
+              <input type="password" class="form-control form-control-custom" id="newCoordinatorPassword" minlength="6" placeholder="Minimum 6 characters" required>
+            </div>
+            <div>
+              <label class="form-label form-label-custom">Department</label>
+              <select class="form-select form-select-custom" id="newCoordinatorDepartment" data-department-select required></select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-custom" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary-custom"><i class="bi bi-check-lg me-1"></i> Save Coordinator</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="adminComplaintModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <form onsubmit="createAdminComplaint(event)">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="bi bi-plus-circle text-primary-custom me-2"></i>Create Complaint for Student</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div id="adminComplaintAlert" class="alert alert-danger alert-custom d-none"></div>
+            <div class="mb-3">
+              <label class="form-label form-label-custom">Student Source</label>
+              <div class="d-flex flex-wrap gap-2">
+                <label class="btn btn-outline-custom btn-sm-custom">
+                  <input class="form-check-input me-1" type="radio" name="adminStudentMode" value="existing" checked onchange="toggleAdminStudentMode()"> Existing Student
+                </label>
+                <label class="btn btn-outline-custom btn-sm-custom">
+                  <input class="form-check-input me-1" type="radio" name="adminStudentMode" value="manual" onchange="toggleAdminStudentMode()"> New Student Details
+                </label>
+              </div>
+            </div>
+            <div id="existingStudentBlock" class="mb-3">
+              <label class="form-label form-label-custom">Student</label>
+              <input class="form-control form-control-custom mb-2" id="adminStudentSearch" placeholder="Search by name, email, or registration no." oninput="filterAdminStudentOptions()">
+              <select class="form-select form-select-custom" id="adminComplaintStudent"></select>
+            </div>
+            <div id="manualStudentBlock" class="row g-3 mb-3 d-none">
+              <div class="col-md-6">
+                <label class="form-label form-label-custom">Student Name</label>
+                <input class="form-control form-control-custom" id="adminManualStudentName" placeholder="Student full name">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label form-label-custom">Student Email</label>
+                <input type="email" class="form-control form-control-custom" id="adminManualStudentEmail" placeholder="student@uni.edu">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label form-label-custom">Registration Number</label>
+                <input class="form-control form-control-custom" id="adminManualStudentId" placeholder="e.g. USP-2026-001">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label form-label-custom">Student Department</label>
+                <input class="form-control form-control-custom" id="adminManualStudentDepartment" placeholder="e.g. Computer Science">
+              </div>
+              <div class="col-12">
+                <label class="form-label form-label-custom">Temporary Password <span style="color:var(--color-text-faint); font-weight:400;">(optional)</span></label>
+                <input class="form-control form-control-custom" id="adminManualStudentPassword" placeholder="Default: student123">
+                <div class="form-text">Give this password to the student if this creates a new account.</div>
+              </div>
+            </div>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label form-label-custom">Complaint Title</label>
+                <input class="form-control form-control-custom" id="adminComplaintTitle" placeholder="Brief summary" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label form-label-custom">Priority</label>
+                <select class="form-select form-select-custom" id="adminComplaintPriority">
+                  <option value="Low">Low</option>
+                  <option value="Medium" selected>Medium</option>
+                  <option value="High">High</option>
+                  <option value="Urgent">Urgent</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label form-label-custom">Category</label>
+                <select class="form-select form-select-custom" id="adminComplaintCategory" data-category-select required></select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label form-label-custom">Concerned Department</label>
+                <select class="form-select form-select-custom" id="adminComplaintDepartment" data-department-select required></select>
+              </div>
+              <div class="col-12">
+                <label class="form-label form-label-custom">Description</label>
+                <textarea class="form-control form-control-custom" id="adminComplaintDescription" rows="4" placeholder="Write the student's issue clearly..." required></textarea>
+              </div>
+              <div class="col-12">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="adminAssignImmediately" onchange="toggleAdminImmediateAssign()">
+                  <label class="form-check-label" for="adminAssignImmediately">Assign this complaint immediately</label>
+                </div>
+              </div>
+              <div class="col-12 d-none" id="adminImmediateAssignBlock">
+                <div class="row g-3 p-3" style="border:1px solid var(--color-border); border-radius:var(--radius-md); background:var(--color-surface-alt);">
+                  <div class="col-md-6">
+                    <label class="form-label form-label-custom">Coordinator</label>
+                    <select class="form-select form-select-custom" id="adminComplaintCoordinator" data-coordinator-select></select>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label form-label-custom">Admin Notes <span style="color:var(--color-text-faint); font-weight:400;">(optional)</span></label>
+                    <input class="form-control form-control-custom" id="adminComplaintAssignNotes" placeholder="Assignment notes">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-custom" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary-custom"><i class="bi bi-check-lg me-1"></i> Create Complaint</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="bi bi-x-circle text-danger me-2"></i>Reject Invalid Complaint</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <label class="form-label form-label-custom">Rejection Reason</label>
+          <textarea class="form-control form-control-custom" id="rejectReason" rows="4" placeholder="Explain why this complaint is invalid..." required></textarea>
+          <input type="hidden" id="rejectComplaintId">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-custom" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary-custom" onclick="rejectComplaint()"><i class="bi bi-x-lg me-1"></i> Reject</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       VIEW COMPLAINT DETAIL MODAL
+       Shows full complaint details
+       ============================================================ -->
+  <div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="detailModalLabel">
+            <i class="bi bi-file-text text-primary-custom me-2"></i>Complaint Details
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="detailModalBody">
+          <!-- Content populated by JavaScript -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-custom" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <footer class="footer-custom">
+    <div class="container text-center">&copy; 2026 University of Southern Punjab — University Complaint Management System</div>
+  </footer>
+
+  <script src="vendor/bootstrap/bootstrap.bundle.min.js"></script>
+  <script src="vendor/chartjs/chart.umd.min.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/chatbot.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      updateNavAuth();
+      loadAdminWorkspace();
+    });
+  </script>
+</body>
+</html>
